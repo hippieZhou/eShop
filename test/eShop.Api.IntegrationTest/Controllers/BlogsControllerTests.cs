@@ -3,7 +3,7 @@ using eShop.Api.DAL.Entities;
 using eShop.Api.IntegrationTest.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace eShop.Api.IntegrationTest
+namespace eShop.Api.IntegrationTest.Controllers
 {
     public class BlogsControllerTests : BaseIntegrationTest
     {
