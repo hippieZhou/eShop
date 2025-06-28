@@ -7,7 +7,7 @@ namespace eShop.Api.Controllers
 {
 
     [ApiController]
-    [Route("api/database")]
+    [Route("api/[controller]")]
     [Produces("application/json")]
     public class DatabaseController : ControllerBase
     {

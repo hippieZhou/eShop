@@ -20,7 +20,7 @@ namespace eShop.Api.IntegrationTest
                 Url = "https://example.com/blogs/1",
             };
 
-            var response = await Client.PostAsJsonAsync("/api/blogs", newBlog);
+            var response = await Client.PostAsJsonAsync("/api/v1/blogs", newBlog);
             Assert.NotNull(response);
             Assert.True(response.IsSuccessStatusCode);
             var sult = await response.Content.ReadFromJsonAsync<Blog>();

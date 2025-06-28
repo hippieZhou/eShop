@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using eShop.Api.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -8,7 +9,7 @@ using NSwag;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
     o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -49,10 +50,25 @@ builder.Services.AddOpenApiDocument(options => {
         };
     };
 });
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1);
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("X-Api-Version"));
+})
+.AddMvc() // This is needed for controllers
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'V";
+    options.SubstituteApiVersionInUrl = true;
+});
 
 builder.Services.AddDbContextFactory<BlogContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("Database");
     options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention(); ;
 });
 

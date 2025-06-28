@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using Respawn;
 using Testcontainers.PostgreSql;
 
@@ -48,21 +47,6 @@ namespace eShop.Api.IntegrationTest.Common
                 });
             });
             base.ConfigureWebHost(builder);
-        }
-
-        public async Task ResetDatabaseAsync()
-        {
-            var connectionString = this._dbContainer.GetConnectionString();
-            var respawner = await Respawner.CreateAsync(connectionString, new RespawnerOptions
-            {
-                SchemasToInclude =
-                [
-                    "public"
-                ],
-                DbAdapter = DbAdapter.Postgres
-            });
-
-            await respawner.ResetAsync(connectionString);
         }
 
         public new async Task DisposeAsync()
