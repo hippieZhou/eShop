@@ -1,10 +1,16 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using eShop.Api.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using NSwag;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,6 +90,47 @@ builder.Services.AddDbContextFactory<BlogContext>(options =>
 #endregion
 
 #region OpenTelemetry 
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing.AddOtlpExporter(options =>
+    {
+        options.Endpoint = new Uri("http://localhost:4317");
+        options.Protocol = OtlpExportProtocol.HttpProtobuf;
+    }).SetResourceBuilder(
+        ResourceBuilder.CreateDefault()
+        .AddService("eShop.Api"))
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation())
+    .WithMetrics(metrics => metrics.AddOtlpExporter(options =>
+    {
+        options.Endpoint = new Uri("http://localhost:4317");
+        options.Protocol = OtlpExportProtocol.HttpProtobuf;
+    }).SetResourceBuilder(
+        ResourceBuilder.CreateDefault()
+        .AddService("eShop.Api"))
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation());
+
+// set OpenTelemetry to log to console at Warning level and above
+//builder.Logging.AddFilter<OpenTelemetryLoggerProvider>(null, LogLevel.Warning);
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.IncludeFormattedMessage = true;
+    options.IncludeScopes = true;
+    options.ParseStateValues = true;
+
+    // we can implement a custom exporter if needed https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry.Exporter.Console/ConsoleLogRecordExporter.cs
+    options.AddConsoleExporter()
+    .SetResourceBuilder(ResourceBuilder.CreateDefault()
+        .AddService("eShop.Api")
+        .AddAttributes(new Dictionary<string, object>
+        {
+            { "service.name", "eShop.Api" },
+            { "service.environment", builder.Environment.EnvironmentName },
+            { "service.version", Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString() ?? "1.0.0" },
+            { "host.name", Environment.MachineName },
+            { "host.architecture", Environment.Is64BitOperatingSystem ? "x64" : "x86" }
+        }));
+});
 #endregion
 
 var app = builder.Build();
