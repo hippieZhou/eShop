@@ -9,6 +9,7 @@ using NSwag;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+#region API Routing
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
@@ -22,7 +23,9 @@ builder.Services.AddControllers().AddJsonOptions(o =>
     o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false));
     o.JsonSerializerOptions.NumberHandling |= JsonNumberHandling.AllowNamedFloatingPointLiterals;
 });
+#endregion
 
+#region OpenAPI
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
 {
@@ -50,6 +53,9 @@ builder.Services.AddOpenApiDocument(options => {
         };
     };
 });
+#endregion
+
+#region ApiVersioning
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new ApiVersion(1);
@@ -65,12 +71,20 @@ builder.Services.AddApiVersioning(options =>
     options.GroupNameFormat = "'v'V";
     options.SubstituteApiVersionInUrl = true;
 });
+#endregion
+
+#region EF Core
 
 builder.Services.AddDbContextFactory<BlogContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("Database");
     options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention(); ;
 });
+
+#endregion
+
+#region OpenTelemetry 
+#endregion
 
 var app = builder.Build();
 
